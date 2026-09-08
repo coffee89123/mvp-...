@@ -85,14 +85,6 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("不可預約過去的日期，請重新選擇。");
     }
 
-    const { data: service } = await db
-      .from("services")
-      .select("id, name")
-      .eq("id", data.serviceId)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (!service) throw new Error("所選服務目前無法預約，請重新選擇。");
-
     const { data: slot } = await db
       .from("time_slots")
       .select("id")
@@ -106,8 +98,6 @@ export const createBooking = createServerFn({ method: "POST" })
       .from("appointments")
       .insert({
         booking_number: "",
-        service_id: service.id,
-        service_name: service.name,
         appointment_date: data.date,
         appointment_time: `${data.time}:00`,
         customer_name: data.name,
@@ -117,7 +107,7 @@ export const createBooking = createServerFn({ method: "POST" })
         note: data.note ?? null,
         status: "booked",
       })
-      .select("booking_number, service_name, appointment_date, appointment_time, customer_name, phone")
+      .select("booking_number, appointment_date, appointment_time, customer_name, phone")
       .single();
 
     if (error) {
