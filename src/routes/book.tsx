@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,25 +29,24 @@ import {
   toDateKey,
   weekdayLabel,
 } from "@/lib/booking";
-import { createBooking, listDaySlots, listOpenDates, listServices } from "@/lib/booking.functions";
+import { createBooking, listDaySlots, listOpenDates } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
       { title: "我要預約｜客戶預約服務中心" },
-      { name: "description", content: "四個步驟完成線上預約：選擇服務、選擇時間、填寫資料、確認預約。" },
+      { name: "description", content: "三個步驟完成線上預約：選擇時間、填寫資料、確認預約。" },
       { property: "og:title", content: "我要預約｜客戶預約服務中心" },
-      { property: "og:description", content: "四個步驟完成線上預約，並取得專屬預約編號。" },
+      { property: "og:description", content: "三個步驟完成線上預約，並取得專屬預約編號。" },
     ],
   }),
   component: BookPage,
 });
 
-const STEP_LABELS = ["選擇服務", "選擇時間", "填寫資料", "確認預約"];
+const STEP_LABELS = ["選擇時間", "填寫資料", "確認預約"];
 
 type Result = {
   booking_number: string;
-  service_name: string;
   appointment_date: string;
   appointment_time: string;
   customer_name: string;
@@ -56,7 +55,6 @@ type Result = {
 
 function BookPage() {
   const [step, setStep] = useState(1);
-  const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", reason: "", note: "" });
@@ -64,17 +62,10 @@ function BookPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result | null>(null);
 
-  const servicesFn = useServerFn(listServices);
   const openDatesFn = useServerFn(listOpenDates);
   const slotsFn = useServerFn(listDaySlots);
   const createFn = useServerFn(createBooking);
 
-  const services = useQuery({
-    queryKey: ["services"],
-    queryFn: () => servicesFn({}),
-    retry: 2,
-    retryDelay: 800,
-  });
   const openDates = useQuery({
     queryKey: ["open-dates"],
     queryFn: () => openDatesFn({}),
@@ -89,13 +80,10 @@ function BookPage() {
     retryDelay: 800,
   });
 
-  const service = services.data?.find((s) => s.id === serviceId) ?? null;
-
   const booking = useMutation({
     mutationFn: () =>
       createFn({
         data: {
-          serviceId: serviceId as string,
           date: date as string,
           time: time as string,
           name: form.name,
@@ -110,7 +98,7 @@ function BookPage() {
       toast.error(error.message || "預約未完成，請稍後再試。");
       if (error.message.includes("時段")) {
         setTime(null);
-        setStep(2);
+        setStep(1);
         void slots.refetch();
       }
     },
@@ -146,7 +134,6 @@ function BookPage() {
             <p className="mt-2 text-sm text-muted-foreground">您的預約已建立，請保留以下預約資訊。</p>
             <dl className="mt-6 divide-y divide-border rounded-lg border border-border text-left">
               <Row label="預約編號" value={result.booking_number} strong />
-              <Row label="服務" value={result.service_name} />
               <Row label="日期" value={formatDate(result.appointment_date)} />
               <Row label="時間" value={result.appointment_time.slice(0, 5)} />
               <Row label="姓名" value={result.customer_name} />
@@ -170,7 +157,7 @@ function BookPage() {
     <Shell>
       <h1 className="text-2xl font-bold text-foreground">我要預約</h1>
 
-      <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <ol className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {STEP_LABELS.map((label, i) => {
           const n = i + 1;
           const active = step === n;
