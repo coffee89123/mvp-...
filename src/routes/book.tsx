@@ -183,48 +183,7 @@ function BookPage() {
       <div className="mt-8">
         {step === 1 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 1：選擇服務</h2>
-            {services.isLoading ? <Loading /> : null}
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {(services.data ?? []).map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setServiceId(s.id)}
-                  className={`rounded-xl border p-5 text-left transition-colors ${
-                    serviceId === s.id
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border hover:border-primary/40 hover:bg-secondary/60"
-                  }`}
-                >
-                  <h3 className="text-base font-semibold text-foreground">{s.name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                  <p className="mt-3 inline-flex items-center gap-1 text-sm text-primary">
-                    <Clock className="size-4" aria-hidden /> 預估時間：{s.duration} 分鐘
-                  </p>
-                </button>
-              ))}
-            </div>
-            {service ? (
-              <p className="mt-4 rounded-lg bg-secondary px-4 py-3 text-sm font-medium text-primary">
-                已選擇：{service.name}
-              </p>
-            ) : null}
-            <div className="mt-6 flex justify-end">
-              <Button
-                className="h-11 w-full sm:w-auto"
-                disabled={!serviceId}
-                onClick={() => setStep(2)}
-              >
-                下一步
-              </Button>
-            </div>
-          </section>
-        ) : null}
-
-        {step === 2 ? (
-          <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 2：選擇日期與時間</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 1：選擇日期與時間</h2>
             <div className="mt-4 grid gap-6 lg:grid-cols-2">
               <Card className="border-border">
                 <CardContent className="flex justify-center pt-6">
@@ -292,19 +251,16 @@ function BookPage() {
             ) : null}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(1)}>
-                上一步
-              </Button>
-              <Button className="h-11" disabled={!date || !time} onClick={() => setStep(3)}>
+              <Button className="h-11 sm:ml-auto" disabled={!date || !time} onClick={() => setStep(2)}>
                 下一步
               </Button>
             </div>
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 2 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 3：填寫預約資料</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 2：填寫預約資料</h2>
             <Card className="mt-4 border-border">
               <CardContent className="space-y-5 pt-6">
                 <Field label="姓名" required error={errors["name"]}>
@@ -386,13 +342,13 @@ function BookPage() {
             </Card>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
+              <Button variant="outline" className="h-11" onClick={() => setStep(1)}>
                 上一步
               </Button>
               <Button
                 className="h-11"
                 onClick={() => {
-                  if (validateForm()) setStep(4);
+                  if (validateForm()) setStep(3);
                 }}
               >
                 下一步
@@ -401,15 +357,14 @@ function BookPage() {
           </section>
         ) : null}
 
-        {step === 4 ? (
+        {step === 3 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 4：確認預約</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 3：確認預約</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <Card className="border-border">
                 <CardContent className="pt-6">
                   <h3 className="text-base font-semibold text-foreground">預約資訊</h3>
                   <dl className="mt-4 divide-y divide-border">
-                    <Row label="服務" value={service?.name ?? ""} />
                     <Row label="日期" value={date ? formatDate(date) : ""} />
                     <Row label="時間" value={time ?? ""} />
                   </dl>
@@ -430,7 +385,7 @@ function BookPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(3)}>
+              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
                 返回修改
               </Button>
               <Button className="h-11" disabled={booking.isPending} onClick={() => booking.mutate()}>
