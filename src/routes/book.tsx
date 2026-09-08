@@ -69,12 +69,24 @@ function BookPage() {
   const slotsFn = useServerFn(listDaySlots);
   const createFn = useServerFn(createBooking);
 
-  const services = useQuery({ queryKey: ["services"], queryFn: () => servicesFn({}) });
-  const openDates = useQuery({ queryKey: ["open-dates"], queryFn: () => openDatesFn({}) });
+  const services = useQuery({
+    queryKey: ["services"],
+    queryFn: () => servicesFn({}),
+    retry: 2,
+    retryDelay: 800,
+  });
+  const openDates = useQuery({
+    queryKey: ["open-dates"],
+    queryFn: () => openDatesFn({}),
+    retry: 2,
+    retryDelay: 800,
+  });
   const slots = useQuery({
     queryKey: ["slots", date],
     queryFn: () => slotsFn({ data: { date: date as string } }),
     enabled: Boolean(date),
+    retry: 2,
+    retryDelay: 800,
   });
 
   const service = services.data?.find((s) => s.id === serviceId) ?? null;
