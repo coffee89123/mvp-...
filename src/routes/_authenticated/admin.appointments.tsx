@@ -35,7 +35,7 @@ type Row = {
   customer_name: string;
   phone: string;
   email: string | null;
-  service_name: string;
+  
   appointment_reason: string;
   note: string | null;
   status: string;
@@ -50,16 +50,11 @@ function AppointmentsPage() {
 
   const [keyword, setKeyword] = useState("");
   const [date, setDate] = useState("");
-  const [service, setService] = useState("all");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState("newest");
   const [detail, setDetail] = useState<Row | null>(null);
 
   const rows = (list.data ?? []) as Row[];
-  const serviceNames = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.service_name))),
-    [rows],
-  );
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
