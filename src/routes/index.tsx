@@ -24,10 +24,9 @@ export const Route = createFileRoute("/")({
 });
 
 const STEPS = [
-  { icon: ClipboardList, title: "選擇服務", desc: "挑選您需要的服務項目。" },
-  { icon: CalendarDays, title: "選擇日期與時間", desc: "查看可預約時段並選擇。" },
-  { icon: UserRound, title: "填寫基本資料", desc: "留下聯絡方式方便我們與您聯繫。" },
-  { icon: CheckCircle2, title: "完成預約", desc: "取得專屬預約編號。" },
+  { icon: CalendarDays, title: "選擇時間", desc: "查看可預約日期與時段並選擇。" },
+  { icon: UserRound, title: "填寫資料", desc: "留下聯絡方式方便我們與您聯繫。" },
+  { icon: CheckCircle2, title: "確認預約", desc: "確認資料並取得專屬預約編號。" },
 ];
 
 const NOTES = [
