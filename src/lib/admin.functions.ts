@@ -72,7 +72,7 @@ export const adminDashboard = createServerFn({ method: "GET" })
     const today = taipeiToday();
     const { data: todayRows } = await db
       .from("appointments")
-      .select("booking_number, appointment_time, customer_name, service_name, status")
+      .select("booking_number, appointment_time, customer_name, status")
       .eq("appointment_date", today)
       .order("appointment_time", { ascending: true });
     const { data: allRows } = await db.from("appointments").select("status");

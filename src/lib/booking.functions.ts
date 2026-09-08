@@ -135,7 +135,7 @@ export const lookupBooking = createServerFn({ method: "POST" })
     const { data: row } = await db
       .from("appointments")
       .select(
-        "booking_number, service_name, appointment_date, appointment_time, customer_name, appointment_reason, note, status",
+        "booking_number, appointment_date, appointment_time, customer_name, appointment_reason, note, status",
       )
       .eq("booking_number", data.bookingNumber.trim().toUpperCase())
       .eq("phone", data.phone)

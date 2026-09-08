@@ -64,7 +64,7 @@ function Dashboard() {
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="py-2 pr-4 font-medium">時間</th>
                     <th className="py-2 pr-4 font-medium">客戶</th>
-                    <th className="py-2 pr-4 font-medium">服務</th>
+                    
                     <th className="py-2 font-medium">狀態</th>
                   </tr>
                 </thead>
@@ -73,7 +73,7 @@ function Dashboard() {
                     <tr key={row.booking_number} className="border-b border-border/60 last:border-0">
                       <td className="py-3 pr-4">{row.appointment_time.slice(0, 5)}</td>
                       <td className="py-3 pr-4">{row.customer_name}</td>
-                      <td className="py-3 pr-4">{row.service_name}</td>
+                      
                       <td className="py-3">
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs ${STATUS_CLASS[row.status as AppointmentStatus]}`}
