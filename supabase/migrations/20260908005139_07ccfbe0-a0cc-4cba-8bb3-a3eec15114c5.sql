@@ -1,0 +1,1 @@
+ALTER TABLE public.appointments ALTER COLUMN service_name DROP NOT NULL;

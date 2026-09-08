@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,25 +29,24 @@ import {
   toDateKey,
   weekdayLabel,
 } from "@/lib/booking";
-import { createBooking, listDaySlots, listOpenDates, listServices } from "@/lib/booking.functions";
+import { createBooking, listDaySlots, listOpenDates } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
       { title: "我要預約｜客戶預約服務中心" },
-      { name: "description", content: "四個步驟完成線上預約：選擇服務、選擇時間、填寫資料、確認預約。" },
+      { name: "description", content: "三個步驟完成線上預約：選擇時間、填寫資料、確認預約。" },
       { property: "og:title", content: "我要預約｜客戶預約服務中心" },
-      { property: "og:description", content: "四個步驟完成線上預約，並取得專屬預約編號。" },
+      { property: "og:description", content: "三個步驟完成線上預約，並取得專屬預約編號。" },
     ],
   }),
   component: BookPage,
 });
 
-const STEP_LABELS = ["選擇服務", "選擇時間", "填寫資料", "確認預約"];
+const STEP_LABELS = ["選擇時間", "填寫資料", "確認預約"];
 
 type Result = {
   booking_number: string;
-  service_name: string;
   appointment_date: string;
   appointment_time: string;
   customer_name: string;
@@ -56,7 +55,6 @@ type Result = {
 
 function BookPage() {
   const [step, setStep] = useState(1);
-  const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", reason: "", note: "" });
@@ -64,17 +62,10 @@ function BookPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result | null>(null);
 
-  const servicesFn = useServerFn(listServices);
   const openDatesFn = useServerFn(listOpenDates);
   const slotsFn = useServerFn(listDaySlots);
   const createFn = useServerFn(createBooking);
 
-  const services = useQuery({
-    queryKey: ["services"],
-    queryFn: () => servicesFn({}),
-    retry: 2,
-    retryDelay: 800,
-  });
   const openDates = useQuery({
     queryKey: ["open-dates"],
     queryFn: () => openDatesFn({}),
@@ -89,13 +80,10 @@ function BookPage() {
     retryDelay: 800,
   });
 
-  const service = services.data?.find((s) => s.id === serviceId) ?? null;
-
   const booking = useMutation({
     mutationFn: () =>
       createFn({
         data: {
-          serviceId: serviceId as string,
           date: date as string,
           time: time as string,
           name: form.name,
@@ -110,7 +98,7 @@ function BookPage() {
       toast.error(error.message || "預約未完成，請稍後再試。");
       if (error.message.includes("時段")) {
         setTime(null);
-        setStep(2);
+        setStep(1);
         void slots.refetch();
       }
     },
@@ -146,7 +134,6 @@ function BookPage() {
             <p className="mt-2 text-sm text-muted-foreground">您的預約已建立，請保留以下預約資訊。</p>
             <dl className="mt-6 divide-y divide-border rounded-lg border border-border text-left">
               <Row label="預約編號" value={result.booking_number} strong />
-              <Row label="服務" value={result.service_name} />
               <Row label="日期" value={formatDate(result.appointment_date)} />
               <Row label="時間" value={result.appointment_time.slice(0, 5)} />
               <Row label="姓名" value={result.customer_name} />
@@ -170,7 +157,7 @@ function BookPage() {
     <Shell>
       <h1 className="text-2xl font-bold text-foreground">我要預約</h1>
 
-      <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <ol className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {STEP_LABELS.map((label, i) => {
           const n = i + 1;
           const active = step === n;
@@ -196,48 +183,7 @@ function BookPage() {
       <div className="mt-8">
         {step === 1 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 1：選擇服務</h2>
-            {services.isLoading ? <Loading /> : null}
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {(services.data ?? []).map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setServiceId(s.id)}
-                  className={`rounded-xl border p-5 text-left transition-colors ${
-                    serviceId === s.id
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border hover:border-primary/40 hover:bg-secondary/60"
-                  }`}
-                >
-                  <h3 className="text-base font-semibold text-foreground">{s.name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                  <p className="mt-3 inline-flex items-center gap-1 text-sm text-primary">
-                    <Clock className="size-4" aria-hidden /> 預估時間：{s.duration} 分鐘
-                  </p>
-                </button>
-              ))}
-            </div>
-            {service ? (
-              <p className="mt-4 rounded-lg bg-secondary px-4 py-3 text-sm font-medium text-primary">
-                已選擇：{service.name}
-              </p>
-            ) : null}
-            <div className="mt-6 flex justify-end">
-              <Button
-                className="h-11 w-full sm:w-auto"
-                disabled={!serviceId}
-                onClick={() => setStep(2)}
-              >
-                下一步
-              </Button>
-            </div>
-          </section>
-        ) : null}
-
-        {step === 2 ? (
-          <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 2：選擇日期與時間</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 1：選擇日期與時間</h2>
             <div className="mt-4 grid gap-6 lg:grid-cols-2">
               <Card className="border-border">
                 <CardContent className="flex justify-center pt-6">
@@ -305,19 +251,16 @@ function BookPage() {
             ) : null}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(1)}>
-                上一步
-              </Button>
-              <Button className="h-11" disabled={!date || !time} onClick={() => setStep(3)}>
+              <Button className="h-11 sm:ml-auto" disabled={!date || !time} onClick={() => setStep(2)}>
                 下一步
               </Button>
             </div>
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 2 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 3：填寫預約資料</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 2：填寫預約資料</h2>
             <Card className="mt-4 border-border">
               <CardContent className="space-y-5 pt-6">
                 <Field label="姓名" required error={errors["name"]}>
@@ -399,13 +342,13 @@ function BookPage() {
             </Card>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
+              <Button variant="outline" className="h-11" onClick={() => setStep(1)}>
                 上一步
               </Button>
               <Button
                 className="h-11"
                 onClick={() => {
-                  if (validateForm()) setStep(4);
+                  if (validateForm()) setStep(3);
                 }}
               >
                 下一步
@@ -414,15 +357,14 @@ function BookPage() {
           </section>
         ) : null}
 
-        {step === 4 ? (
+        {step === 3 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 4：確認預約</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 3：確認預約</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <Card className="border-border">
                 <CardContent className="pt-6">
                   <h3 className="text-base font-semibold text-foreground">預約資訊</h3>
                   <dl className="mt-4 divide-y divide-border">
-                    <Row label="服務" value={service?.name ?? ""} />
                     <Row label="日期" value={date ? formatDate(date) : ""} />
                     <Row label="時間" value={time ?? ""} />
                   </dl>
@@ -443,7 +385,7 @@ function BookPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(3)}>
+              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
                 返回修改
               </Button>
               <Button className="h-11" disabled={booking.isPending} onClick={() => booking.mutate()}>

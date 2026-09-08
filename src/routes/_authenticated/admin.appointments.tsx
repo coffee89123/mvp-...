@@ -35,7 +35,7 @@ type Row = {
   customer_name: string;
   phone: string;
   email: string | null;
-  service_name: string;
+  
   appointment_reason: string;
   note: string | null;
   status: string;
@@ -50,16 +50,11 @@ function AppointmentsPage() {
 
   const [keyword, setKeyword] = useState("");
   const [date, setDate] = useState("");
-  const [service, setService] = useState("all");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState("newest");
   const [detail, setDetail] = useState<Row | null>(null);
 
   const rows = (list.data ?? []) as Row[];
-  const serviceNames = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.service_name))),
-    [rows],
-  );
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
@@ -70,7 +65,6 @@ function AppointmentsPage() {
       )
         return false;
       if (date && r.appointment_date !== date) return false;
-      if (service !== "all" && r.service_name !== service) return false;
       if (status !== "all" && r.status !== status) return false;
       return true;
     });
@@ -78,7 +72,7 @@ function AppointmentsPage() {
     return out.sort((a, b) =>
       sort === "oldest" ? key(a).localeCompare(key(b)) : key(b).localeCompare(key(a)),
     );
-  }, [rows, keyword, date, service, status, sort]);
+  }, [rows, keyword, date, status, sort]);
 
   const mutate = useMutation({
     mutationFn: (v: { id: string; status: AppointmentStatus }) => updateFn({ data: v }),
@@ -96,7 +90,7 @@ function AppointmentsPage() {
       <h2 className="text-xl font-semibold text-foreground">預約管理</h2>
 
       <Card className="border-border">
-        <CardContent className="grid gap-3 pt-6 md:grid-cols-5">
+        <CardContent className="grid gap-3 pt-6 md:grid-cols-4">
           <Input
             placeholder="搜尋姓名、手機或預約編號"
             value={keyword}
@@ -104,19 +98,6 @@ function AppointmentsPage() {
             className="md:col-span-2"
           />
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <Select value={service} onValueChange={setService}>
-            <SelectTrigger>
-              <SelectValue placeholder="服務項目" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部服務</SelectItem>
-              {serviceNames.map((n) => (
-                <SelectItem key={n} value={n}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger>
               <SelectValue placeholder="狀態" />
@@ -143,7 +124,7 @@ function AppointmentsPage() {
 
       <Card className="border-border">
         <CardContent className="overflow-x-auto pt-6">
-          <table className="w-full min-w-[840px] text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 pr-4 font-medium">預約編號</th>
@@ -151,7 +132,6 @@ function AppointmentsPage() {
                 <th className="pb-3 pr-4 font-medium">時間</th>
                 <th className="pb-3 pr-4 font-medium">姓名</th>
                 <th className="pb-3 pr-4 font-medium">手機</th>
-                <th className="pb-3 pr-4 font-medium">服務</th>
                 <th className="pb-3 pr-4 font-medium">狀態</th>
                 <th className="pb-3 font-medium">操作</th>
               </tr>
@@ -164,7 +144,6 @@ function AppointmentsPage() {
                   <td className="py-3 pr-4">{r.appointment_time.slice(0, 5)}</td>
                   <td className="py-3 pr-4">{r.customer_name}</td>
                   <td className="py-3 pr-4">{r.phone}</td>
-                  <td className="py-3 pr-4">{r.service_name}</td>
                   <td className="py-3 pr-4">
                     <span
                       className={`rounded-full px-2 py-1 text-xs ${STATUS_CLASS[r.status as AppointmentStatus] ?? ""}`}
@@ -181,7 +160,7 @@ function AppointmentsPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-8 text-center text-muted-foreground">
                     目前沒有符合條件的預約資料。
                   </td>
                 </tr>
@@ -199,7 +178,6 @@ function AppointmentsPage() {
           {detail && (
             <div className="space-y-2 text-sm">
               <Line label="預約編號" value={detail.booking_number} />
-              <Line label="服務項目" value={detail.service_name} />
               <Line label="預約日期" value={formatDate(detail.appointment_date)} />
               <Line label="預約時間" value={detail.appointment_time.slice(0, 5)} />
               <Line label="姓名" value={detail.customer_name} />

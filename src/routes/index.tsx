@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, ClipboardList, CheckCircle2, UserRound, Info } from "lucide-react";
+import { CalendarDays, CheckCircle2, UserRound, Info } from "lucide-react";
 
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,12 @@ export const Route = createFileRoute("/")({
       { title: "客戶預約服務中心｜線上預約專人服務" },
       {
         name: "description",
-        content: "線上選擇服務項目與方便的時間，快速完成預約。支援開戶諮詢、開戶協助、補件協助與其他諮詢。",
+        content: "線上選擇方便的時間，三個步驟快速完成預約，並可隨時查詢或取消預約。",
       },
       { property: "og:title", content: "客戶預約服務中心｜線上預約專人服務" },
       {
         property: "og:description",
-        content: "線上選擇服務項目與方便的時間，快速完成預約，並可隨時查詢或取消預約。",
+        content: "線上選擇方便的時間，快速完成預約，並可隨時查詢或取消預約。",
       },
     ],
   }),
@@ -24,10 +24,9 @@ export const Route = createFileRoute("/")({
 });
 
 const STEPS = [
-  { icon: ClipboardList, title: "選擇服務", desc: "挑選您需要的服務項目。" },
-  { icon: CalendarDays, title: "選擇日期與時間", desc: "查看可預約時段並選擇。" },
-  { icon: UserRound, title: "填寫基本資料", desc: "留下聯絡方式方便我們與您聯繫。" },
-  { icon: CheckCircle2, title: "完成預約", desc: "取得專屬預約編號。" },
+  { icon: CalendarDays, title: "選擇時間", desc: "查看可預約日期與時段並選擇。" },
+  { icon: UserRound, title: "填寫資料", desc: "留下聯絡方式方便我們與您聯繫。" },
+  { icon: CheckCircle2, title: "確認預約", desc: "確認資料並取得專屬預約編號。" },
 ];
 
 const NOTES = [
@@ -52,7 +51,7 @@ function Index() {
                 歡迎使用客戶預約服務中心
               </h1>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-                請選擇您需要的服務與方便的時間，我們將為您安排服務。
+                請選擇您方便的時間，我們將為您安排專人服務。
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="h-12 text-base">
@@ -68,7 +67,7 @@ function Index() {
 
         <section className="mx-auto w-full max-w-6xl px-4 py-14">
           <h2 className="text-xl font-semibold text-foreground sm:text-2xl">預約流程</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {STEPS.map((step, i) => (
               <Card key={step.title} className="border-border">
                 <CardContent className="pt-6">

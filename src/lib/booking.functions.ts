@@ -10,19 +10,8 @@ async function admin() {
   return supabaseAdmin;
 }
 
-export const listServices = createServerFn({ method: "GET" }).handler(async () => {
-  const db = await admin();
-  const { data, error } = await db
-    .from("services")
-    .select("id, name, description, duration")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-  if (error) {
-    console.error("[listServices]", error);
-    throw new Error("服務項目載入失敗，請稍後再試。");
-  }
-  return data ?? [];
-});
+
+
 
 /** 取得某日期的可預約時段（含已被預約狀態） */
 export const listDaySlots = createServerFn({ method: "GET" })
@@ -68,7 +57,6 @@ export const listOpenDates = createServerFn({ method: "GET" }).handler(async () 
 });
 
 const bookingSchema = z.object({
-  serviceId: z.string().uuid("請選擇服務項目"),
   date: dateSchema,
   time: z.string().regex(/^\d{2}:\d{2}$/, "時間格式不正確"),
   name: z.string().trim().min(1, "請輸入姓名").max(50, "姓名過長"),
@@ -97,14 +85,6 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("不可預約過去的日期，請重新選擇。");
     }
 
-    const { data: service } = await db
-      .from("services")
-      .select("id, name")
-      .eq("id", data.serviceId)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (!service) throw new Error("所選服務目前無法預約，請重新選擇。");
-
     const { data: slot } = await db
       .from("time_slots")
       .select("id")
@@ -118,8 +98,6 @@ export const createBooking = createServerFn({ method: "POST" })
       .from("appointments")
       .insert({
         booking_number: "",
-        service_id: service.id,
-        service_name: service.name,
         appointment_date: data.date,
         appointment_time: `${data.time}:00`,
         customer_name: data.name,
@@ -129,7 +107,7 @@ export const createBooking = createServerFn({ method: "POST" })
         note: data.note ?? null,
         status: "booked",
       })
-      .select("booking_number, service_name, appointment_date, appointment_time, customer_name, phone")
+      .select("booking_number, appointment_date, appointment_time, customer_name, phone")
       .single();
 
     if (error) {
@@ -157,7 +135,7 @@ export const lookupBooking = createServerFn({ method: "POST" })
     const { data: row } = await db
       .from("appointments")
       .select(
-        "booking_number, service_name, appointment_date, appointment_time, customer_name, appointment_reason, note, status",
+        "booking_number, appointment_date, appointment_time, customer_name, appointment_reason, note, status",
       )
       .eq("booking_number", data.bookingNumber.trim().toUpperCase())
       .eq("phone", data.phone)

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/lookup")({
 
 type Booking = {
   booking_number: string;
-  service_name: string;
+  
   appointment_date: string;
   appointment_time: string;
   customer_name: string;
@@ -133,7 +133,7 @@ function LookupPage() {
                 </span>
               </div>
               <dl className="mt-4 divide-y divide-border rounded-lg border border-border">
-                <Row label="預約服務" value={booking.service_name} />
+                
                 <Row label="日期" value={formatDate(booking.appointment_date)} />
                 <Row label="時間" value={booking.appointment_time.slice(0, 5)} />
                 <Row label="姓名" value={booking.customer_name} />
