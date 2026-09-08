@@ -17,7 +17,10 @@ export const listServices = createServerFn({ method: "GET" }).handler(async () =
     .select("id, name, description, duration")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-  if (error) throw new Error("服務項目載入失敗，請稍後再試。");
+  if (error) {
+    console.error("[listServices]", error);
+    throw new Error("服務項目載入失敗，請稍後再試。");
+  }
   return data ?? [];
 });
 
