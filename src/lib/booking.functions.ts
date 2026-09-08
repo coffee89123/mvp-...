@@ -57,7 +57,6 @@ export const listOpenDates = createServerFn({ method: "GET" }).handler(async () 
 });
 
 const bookingSchema = z.object({
-  serviceId: z.string().uuid("請選擇服務項目"),
   date: dateSchema,
   time: z.string().regex(/^\d{2}:\d{2}$/, "時間格式不正確"),
   name: z.string().trim().min(1, "請輸入姓名").max(50, "姓名過長"),
