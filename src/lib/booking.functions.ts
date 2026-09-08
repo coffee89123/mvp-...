@@ -10,19 +10,8 @@ async function admin() {
   return supabaseAdmin;
 }
 
-export const listServices = createServerFn({ method: "GET" }).handler(async () => {
-  const db = await admin();
-  const { data, error } = await db
-    .from("services")
-    .select("id, name, description, duration")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-  if (error) {
-    console.error("[listServices]", error);
-    throw new Error("服務項目載入失敗，請稍後再試。");
-  }
-  return data ?? [];
-});
+
+
 
 /** 取得某日期的可預約時段（含已被預約狀態） */
 export const listDaySlots = createServerFn({ method: "GET" })
