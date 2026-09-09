@@ -59,7 +59,7 @@ export type Database = {
           note: string | null
           phone: string
           service_id: string | null
-          service_name: string
+          service_name: string | null
           status: string
           updated_at: string
         }
@@ -75,7 +75,7 @@ export type Database = {
           note?: string | null
           phone: string
           service_id?: string | null
-          service_name: string
+          service_name?: string | null
           status?: string
           updated_at?: string
         }
@@ -91,7 +91,7 @@ export type Database = {
           note?: string | null
           phone?: string
           service_id?: string | null
-          service_name?: string
+          service_name?: string | null
           status?: string
           updated_at?: string
         }
