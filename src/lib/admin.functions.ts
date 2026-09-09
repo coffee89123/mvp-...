@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { taipeiToday } from "./booking";
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
@@ -100,6 +101,20 @@ export const adminAppointments = createServerFn({ method: "GET" })
       .order("appointment_time", { ascending: false });
     if (error) throw new Error("預約資料載入失敗。");
     return data ?? [];
+  });
+
+/** 取得某筆預約的客戶基本資料 */
+export const adminAppointmentProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ appointmentId: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const db = await assertAdmin(context);
+    const { data: row } = await db
+      .from("appointment_profiles")
+      .select("data")
+      .eq("appointment_id", data.appointmentId)
+      .maybeSingle();
+    return { profile: (row?.data ?? null) as unknown as Json | null };
   });
 
 export const updateAppointmentStatus = createServerFn({ method: "POST" })

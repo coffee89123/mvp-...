@@ -14,7 +14,7 @@ export const STATUS_CLASS: Record<AppointmentStatus, string> = {
   no_show: "bg-destructive/10 text-destructive",
 };
 
-export const REASON_OPTIONS = ["開戶", "補件", "資料確認", "操作問題", "其他"];
+export const REASON_OPTIONS = ["未成年開戶"];
 
 /** 以台灣時區（Asia/Taipei）取得今天的 YYYY-MM-DD */
 export function taipeiToday(): string {

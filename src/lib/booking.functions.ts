@@ -74,6 +74,7 @@ const bookingSchema = z.object({
     .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), "Email 格式不正確"),
   reason: z.string().trim().min(1, "請選擇預約事項"),
   note: z.string().trim().max(500, "備註最多 500 字").optional(),
+  profile: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const createBooking = createServerFn({ method: "POST" })
@@ -104,10 +105,11 @@ export const createBooking = createServerFn({ method: "POST" })
         phone: data.phone,
         email: data.email ?? null,
         appointment_reason: data.reason,
+        service_name: data.reason,
         note: data.note ?? null,
         status: "booked",
       })
-      .select("booking_number, appointment_date, appointment_time, customer_name, phone")
+      .select("id, booking_number, appointment_date, appointment_time, customer_name, phone")
       .single();
 
     if (error) {
@@ -116,6 +118,14 @@ export const createBooking = createServerFn({ method: "POST" })
       }
       throw new Error("預約未完成，請稍後再試。");
     }
+
+    if (data.profile) {
+      const { error: profileError } = await db
+        .from("appointment_profiles")
+        .insert({ appointment_id: created.id, data: data.profile as never });
+      if (profileError) throw new Error("基本資料儲存失敗，請聯繫客服確認預約。");
+    }
+
     return created;
   });
 
