@@ -30,6 +30,14 @@ import {
   weekdayLabel,
 } from "@/lib/booking";
 import { createBooking, listDaySlots, listOpenDates } from "@/lib/booking.functions";
+import { CustomerProfileForm } from "@/components/CustomerProfileForm";
+import {
+  type ProfileData,
+  emptyProfile,
+  normalizeProfile,
+  toMinguo,
+  validateProfile,
+} from "@/lib/profile";
 
 export const Route = createFileRoute("/book")({
   head: () => ({
@@ -43,7 +51,7 @@ export const Route = createFileRoute("/book")({
   component: BookPage,
 });
 
-const STEP_LABELS = ["選擇時間", "填寫資料", "確認預約"];
+const STEP_LABELS = ["選擇時間", "填寫資料", "客戶基本資料", "確認預約"];
 
 type Result = {
   booking_number: string;
@@ -60,6 +68,8 @@ function BookPage() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", reason: "", note: "" });
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [profile, setProfile] = useState<ProfileData>(() => emptyProfile());
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result | null>(null);
 
   const openDatesFn = useServerFn(listOpenDates);
@@ -91,6 +101,7 @@ function BookPage() {
           email: form.email || undefined,
           reason: form.reason,
           note: form.note || undefined,
+          profile: normalizeProfile(profile) as unknown as Record<string, unknown>,
         },
       }),
     onSuccess: (data) => setResult(data as Result),
@@ -116,6 +127,16 @@ function BookPage() {
     setErrors(next);
     if (Object.keys(next).length > 0) {
       toast.error("請確認必填欄位是否已完成。");
+      return false;
+    }
+    return true;
+  }
+
+  function validateProfileStep() {
+    const next = validateProfile(profile);
+    setProfileErrors(next);
+    if (Object.keys(next).length > 0) {
+      toast.error("請確認客戶基本資料的必填欄位。");
       return false;
     }
     return true;
@@ -157,7 +178,7 @@ function BookPage() {
     <Shell>
       <h1 className="text-2xl font-bold text-foreground">我要預約</h1>
 
-      <ol className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <ol className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {STEP_LABELS.map((label, i) => {
           const n = i + 1;
           const active = step === n;
@@ -359,7 +380,32 @@ function BookPage() {
 
         {step === 3 ? (
           <section>
-            <h2 className="text-lg font-semibold text-foreground">Step 3：確認預約</h2>
+            <h2 className="text-lg font-semibold text-foreground">Step 3：客戶基本資料</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              請完整填寫以下資料，標示 <span className="text-destructive">*</span> 為必填欄位。
+            </p>
+            <div className="mt-4">
+              <CustomerProfileForm value={profile} onChange={setProfile} errors={profileErrors} />
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
+                上一步
+              </Button>
+              <Button
+                className="h-11"
+                onClick={() => {
+                  if (validateProfileStep()) setStep(4);
+                }}
+              >
+                下一步
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 4 ? (
+          <section>
+            <h2 className="text-lg font-semibold text-foreground">Step 4：確認預約</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <Card className="border-border">
                 <CardContent className="pt-6">
@@ -382,10 +428,26 @@ function BookPage() {
                   </dl>
                 </CardContent>
               </Card>
+              <Card className="border-border lg:col-span-2">
+                <CardContent className="pt-6">
+                  <h3 className="text-base font-semibold text-foreground">客戶基本資料</h3>
+                  <dl className="mt-4 divide-y divide-border">
+                    <Row label="委託人姓名" value={profile.clientName} />
+                    <Row label="身分證字號／統一編號" value={profile.clientId} />
+                    <Row label="生日" value={toMinguo(profile.clientBirth) || "未填寫"} />
+                    <Row label="手機" value={profile.mobilePhone} />
+                    <Row
+                      label="戶籍地址"
+                      value={`${profile.hZip} ${profile.hCity}${profile.hDistrict}${profile.hStreet}`.trim()}
+                    />
+                    <Row label="法定代理人一" value={profile.reps[0].name} />
+                  </dl>
+                </CardContent>
+              </Card>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" className="h-11" onClick={() => setStep(2)}>
+              <Button variant="outline" className="h-11" onClick={() => setStep(3)}>
                 返回修改
               </Button>
               <Button className="h-11" disabled={booking.isPending} onClick={() => booking.mutate()}>

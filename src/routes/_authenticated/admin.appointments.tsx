@@ -20,8 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { adminAppointments, updateAppointmentStatus } from "@/lib/admin.functions";
+import {
+  adminAppointmentProfile,
+  adminAppointments,
+  updateAppointmentStatus,
+} from "@/lib/admin.functions";
 import { STATUS_CLASS, STATUS_LABEL, formatDate, type AppointmentStatus } from "@/lib/booking";
+import { toMinguo } from "@/lib/profile";
 
 export const Route = createFileRoute("/_authenticated/admin/appointments")({
   component: AppointmentsPage,
@@ -53,6 +58,14 @@ function AppointmentsPage() {
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState("newest");
   const [detail, setDetail] = useState<Row | null>(null);
+
+  const profileFn = useServerFn(adminAppointmentProfile);
+  const profile = useQuery({
+    queryKey: ["admin-appointment-profile", detail?.id],
+    queryFn: () => profileFn({ data: { appointmentId: detail?.id as string } }),
+    enabled: Boolean(detail?.id),
+    retry: 1,
+  });
 
   const rows = (list.data ?? []) as Row[];
 
@@ -171,7 +184,7 @@ function AppointmentsPage() {
       </Card>
 
       <Dialog open={detail !== null} onOpenChange={(o) => !o && setDetail(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>預約詳細資料</DialogTitle>
           </DialogHeader>
@@ -189,6 +202,17 @@ function AppointmentsPage() {
                 label="目前狀態"
                 value={STATUS_LABEL[detail.status as AppointmentStatus] ?? detail.status}
               />
+
+              <div className="pt-4">
+                <h3 className="mb-2 text-base font-semibold text-foreground">客戶基本資料</h3>
+                {profile.isLoading ? (
+                  <p className="text-muted-foreground">載入中…</p>
+                ) : profile.data ? (
+                  <ProfileView data={profile.data as Record<string, any>} />
+                ) : (
+                  <p className="text-muted-foreground">未填寫</p>
+                )}
+              </div>
 
               {detail.status === "booked" ? (
                 <div className="flex gap-3 pt-4">
@@ -225,3 +249,77 @@ function Line({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function ProfileView({ data }: { data: Record<string, any> }) {
+  const t = (v: unknown) => (v === undefined || v === null || v === "" ? "（未填寫）" : String(v));
+  const other = (v: unknown, o: unknown) => (v === "其他" && o ? `其他：${String(o)}` : t(v));
+  const addr = (zip: unknown, city: unknown, dist: unknown, street: unknown) =>
+    t(`${t(zip) === "（未填寫）" ? "" : zip} ${city ?? ""}${dist ?? ""}${street ?? ""}`.trim());
+  const reps: Record<string, any>[] = Array.isArray(data["reps"]) ? data["reps"] : [];
+
+  return (
+    <div className="space-y-5">
+      <Group title="委託人基本資料">
+        <Line label="委託人姓名" value={t(data["clientName"])} />
+        <Line label="身分證字號／統一編號" value={t(data["clientId"])} />
+        <Line label="生日" value={toMinguo(String(data["clientBirth"] ?? "")) || "（未填寫）"} />
+        <Line label="國籍" value={t(data["nationality"])} />
+        <Line label="性別" value={t(data["gender"])} />
+        <Line label="出生地" value={t(data["birthPlace"])} />
+        <Line label="住家電話" value={t(data["homePhone"])} />
+        <Line label="手機" value={t(data["mobilePhone"])} />
+      </Group>
+
+      <Group title="地址資訊">
+        <Line
+          label="戶籍地址"
+          value={addr(data["hZip"], data["hCity"], data["hDistrict"], data["hStreet"])}
+        />
+        <Line
+          label="通訊地址"
+          value={addr(data["mZip"], data["mCity"], data["mDistrict"], data["mStreet"])}
+        />
+      </Group>
+
+      <Group title="聯絡與電子郵件">
+        <Line label="E-mail" value={t(data["email"])} />
+        <Line label="緊急聯絡人" value={t(data["emergencyName"])} />
+        <Line label="緊急聯絡人關係" value={t(data["emergencyRelation"])} />
+        <Line label="緊急聯絡人手機" value={t(data["emergencyPhone"])} />
+      </Group>
+
+      <Group title="學歷與職業概況">
+        <Line label="教育程度" value={other(data["education"], data["educationOther"])} />
+        <Line label="就業狀態" value={other(data["employment"], data["employmentOther"])} />
+        <Line label="服務機構名稱" value={t(data["companyName"])} />
+        <Line label="服務機構電話" value={t(data["companyPhone"])} />
+        <Line label="職稱" value={t(data["jobTitle"])} />
+        <Line label="行業類別" value={other(data["industry"], data["industryOther"])} />
+      </Group>
+
+      {reps.map((r, i) => (
+        <Group key={i} title={`法定代理人${i === 0 ? "一" : "二"}`}>
+          <Line label="姓名" value={t(r["name"])} />
+          <Line label="身分證字號" value={t(r["id"])} />
+          <Line label="手機" value={t(r["phone"])} />
+          <Line label="就業狀態" value={other(r["employment"], r["employmentOther"])} />
+          <Line label="服務機構名稱" value={t(r["company"])} />
+          <Line label="服務機構電話" value={t(r["companyPhone"])} />
+          <Line label="職稱" value={t(r["title"])} />
+          <Line label="行業別" value={t(r["industry"])} />
+          <Line label="E-mail" value={t(r["email"])} />
+        </Group>
+      ))}
+    </div>
+  );
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 border-b border-border pb-1 text-sm font-bold text-foreground">{title}</p>
+      {children}
+    </div>
+  );
+}
+

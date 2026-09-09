@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_profiles: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_profiles_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string
